@@ -1,3 +1,6 @@
 [submodule "smart-contracts"]
 	path = smart-contracts
 	url = https://github.com/melonproject/smart-contracts
+[submodule "chronos"]
+	path = chronos
+	url = https://github.com/chronologic/chronos
