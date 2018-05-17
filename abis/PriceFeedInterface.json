@@ -1,0 +1,349 @@
+[
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "PriceUpdated",
+		"type": "event"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "ofAssets",
+				"type": "address[]"
+			},
+			{
+				"name": "newPrices",
+				"type": "uint256[]"
+			}
+		],
+		"name": "update",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "sellAsset",
+				"type": "address"
+			},
+			{
+				"name": "buyAsset",
+				"type": "address"
+			}
+		],
+		"name": "existsPriceOnAssetPair",
+		"outputs": [
+			{
+				"name": "isExistent",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "getDecimals",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getInterval",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "getInvertedPrice",
+		"outputs": [
+			{
+				"name": "isRecent",
+				"type": "bool"
+			},
+			{
+				"name": "invertedPrice",
+				"type": "uint256"
+			},
+			{
+				"name": "decimal",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getLastUpdateId",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "getName",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "sellAsset",
+				"type": "address"
+			},
+			{
+				"name": "buyAsset",
+				"type": "address"
+			},
+			{
+				"name": "sellQuantity",
+				"type": "uint256"
+			},
+			{
+				"name": "buyQuantity",
+				"type": "uint256"
+			}
+		],
+		"name": "getOrderPrice",
+		"outputs": [
+			{
+				"name": "orderPrice",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "getPrice",
+		"outputs": [
+			{
+				"name": "isRecent",
+				"type": "bool"
+			},
+			{
+				"name": "price",
+				"type": "uint256"
+			},
+			{
+				"name": "decimal",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAssets",
+				"type": "address[]"
+			}
+		],
+		"name": "getPrices",
+		"outputs": [
+			{
+				"name": "areRecent",
+				"type": "bool"
+			},
+			{
+				"name": "prices",
+				"type": "uint256[]"
+			},
+			{
+				"name": "decimals",
+				"type": "uint256[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getQuoteAsset",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofBase",
+				"type": "address"
+			},
+			{
+				"name": "ofQuote",
+				"type": "address"
+			}
+		],
+		"name": "getReferencePrice",
+		"outputs": [
+			{
+				"name": "isRecent",
+				"type": "bool"
+			},
+			{
+				"name": "referencePrice",
+				"type": "uint256"
+			},
+			{
+				"name": "decimal",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "getSymbol",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getValidity",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAsset",
+				"type": "address"
+			}
+		],
+		"name": "hasRecentPrice",
+		"outputs": [
+			{
+				"name": "isRecent",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "ofAssets",
+				"type": "address[]"
+			}
+		],
+		"name": "hasRecentPrices",
+		"outputs": [
+			{
+				"name": "areRecent",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

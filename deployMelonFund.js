@@ -1,11 +1,16 @@
 const parityApi = require('@parity/api')
+const PriceFeedInterfaceABI = require('./abis/PriceFeedInterface');
+const FundInterfaceABI = require('./abis/FundInterface');
+const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
+
+const PARITY_PROVIDER = 'http://localhost:8545';//'https://rarely-suitable-shark.quiknode.io/87817da9-942d-4275-98c0-4176eee51e1a/aB5gwSfQdN4jmkS65F1HyA==/'//'https://kovan.infura.io/6M6ROam68gmdp9OeNmy'; //
 
 /** Parity provider set up */
-const provider = new parityApi.Provider.Http('http://localhost:8545')
-const pApi = new parityApi(provider)
+const provider = new parityApi.Provider.Http(PARITY_PROVIDER);
+const pApi = new parityApi(provider);
 
 /** Ether currency symbol */
-const etherSymbol = 'Ξ'
+const etherSymbol = 'Ξ';
 
 /** Kovan contracts */
 const contracts = {
@@ -43,9 +48,33 @@ Account balance: ${balance/10**18}${etherSymbol}`)
         gasPrice: pApi.util.toWei('2', 'shannon'), // shannon === gwei... parity prefers the shannon terminology
     }
 
+    const TEST_FUND_ADDRESS = '0x3BeBf94Ab7e9Da434137EFb8226eA8d50AA97389';
 
+    const fundContract = await pApi.newContract(FundInterfaceABI, TEST_FUND_ADDRESS);
 
+    const ETHER_TOKEN_SYMBOL = 'ETH-T-M';
 
+    const MELON_TOKEN_SYMBOL = 'MLN-T-M';
+
+    const TOKEN_SYMBOL = ETHER_TOKEN_SYMBOL;
+
+    const realPriceFeedAddress = (await fundContract.instance.getModules.call())[0];
+
+    console.log(realPriceFeedAddress, 'realprice');
+
+    const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, realPriceFeedAddress);
+
+    const assetAddress = tokenInfo.kovan.find(token => token.symbol === TOKEN_SYMBOL).address;
+
+    console.log('asset address', assetAddress);
+
+    const [isRecent, price, decimal] = await priceFeed.instance.getPrice.call({}, [assetAddress]);
+
+    console.log('priceFeedPrice', price.toFixed());
+
+    const STOP_LOSS_PRICE_SELL = '';
+
+    // asset address, conditional melon address,
 }
 
 main()
