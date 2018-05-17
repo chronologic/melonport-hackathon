@@ -1,3 +1,5 @@
+const fs = require('fs')
+
 const parityApi = require('@parity/api')
 
 /** Parity provider set up */
@@ -43,9 +45,16 @@ Account balance: ${balance/10**18}${etherSymbol}`)
         gasPrice: pApi.util.toWei('2', 'shannon'), // shannon === gwei... parity prefers the shannon terminology
     }
 
+    /** Deploy the proxy wallet, which will be the fund manager */
+    const Proxy_Wallet_ABI = fs.readFileSync('./tmp/Proxy_Wallet.abi')
+    const Proxy_Wallet_Bytecode = fs.readFileSync('./tmp/Proxy_Wallet.bin')
 
-
-
+    // console.log(pApi)
+    console.log(JSON.parse(Proxy_Wallet_ABI.toString()))
+    const c = pApi.newContract(pApi.eth, JSON.parse(Proxy_Wallet_ABI.toString()))
+    // console.log(c)
+    // const c2 = await c.deploy('0x0e0EF6257569b428c058317722494f21Df38E1C2')
+    // console.log(c2)
 }
 
 main()
