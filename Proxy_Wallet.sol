@@ -7,14 +7,14 @@ contract Proxy_Wallet {
 
     address[] whitelist;
     uint8 index;
-    address scheduler;
+    Scheduler scheduler;
 
     function Proxy_Wallet(address _chronosScheduler) {
         whitelist.push(msg.sender);
         scheduler = Scheduler(_chronosScheduler);
     }
 
-    function getIndex() {
+    function getIndex() returns (uint8) {
         return (index % (MAX_WHITELIST-1)) +1;
     }
 
