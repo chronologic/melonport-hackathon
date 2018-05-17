@@ -4,3 +4,7 @@
 [submodule "chronos"]
 	path = chronos
 	url = https://github.com/chronologic/chronos
+[submodule "timenode"]
+	path = timenode
+	url = https://github.com/chronologic/timenode
+	branch = melonport-hackathon

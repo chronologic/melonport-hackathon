@@ -1,0 +1,25 @@
+{
+  "name": "melonport-hackathon",
+  "version": "0.0.1",
+  "description": "Chronos X Melonport === <3",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chronologic/melonport-hackathon.git"
+  },
+  "keywords": [
+    "melonport",
+    "melon",
+    "chronos",
+    "chronologic"
+  ],
+  "author": "lsaether, kurazashi",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/chronologic/melonport-hackathon/issues"
+  },
+  "homepage": "https://github.com/chronologic/melonport-hackathon#readme"
+}

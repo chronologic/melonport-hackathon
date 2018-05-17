@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "./chronos/Scheduler.sol";
+import "./chronos/contracts/Scheduler.sol";
 
 contract Proxy_Wallet {
     uint8 constant MAX_WHITELIST = 5;
