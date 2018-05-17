@@ -1,0 +1,4 @@
+#melonport-hackathon
+
+We use the Chronos conditional scheduler to implement stop-loss and 
+other kinds of conditional orders on the Melon fund manager.
