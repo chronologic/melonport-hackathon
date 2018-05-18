@@ -24,6 +24,8 @@ class Asset {
         return this.instance.methods.approve(spender, value).send(opts)
     }
 
+    // allowance(owner, )
+
     transfer(to, value, data, opts) {
         return this.instance.methods.transfer(to, value, data).send(opts)
     }
@@ -87,30 +89,30 @@ const main = async () => {
         return melonfund.methods.getLastRequestId().call()
     }
 
-    const melToken = new Asset(MELON_T_ADDR)
-    await melToken.transfer(PROXY_WALLET, 120000, "0x", {
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    // const melToken = new Asset(MELON_T_ADDR)
+    // await melToken.transfer(PROXY_WALLET, 10**20, "0x", {
+    //     from: (await w3.eth.getAccounts())[0],
+    //     gas: 6000000,
+    //     gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
 
-    console.log(await melToken.balanceOf((await w3.eth.getAccounts())[0]))
+    // console.log(await melToken.balanceOf((await w3.eth.getAccounts())[0]))
 
-    const wEther = new Asset(ETH_T_ADDR)
-    await wEther.transfer(PROXY_WALLET, 120000, "0x", {
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    // const wEther = new Asset(ETH_T_ADDR)
+    // await wEther.transfer(PROXY_WALLET, 10**20, "0x", {
+    //     from: (await w3.eth.getAccounts())[0],
+    //     gas: 6000000,
+    //     gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
 
-    console.log(await wEther.balanceOf((await w3.eth.getAccounts())[0]))
+    // console.log(await wEther.balanceOf((await w3.eth.getAccounts())[0]))
 
 
     // console.log(
-        await sendThruProxy(
-            melonfund.options.address,
-            await genEnableInvestmentData(ETH_T_ADDR),
-        )
+        // await sendThruProxy(
+        //     melonfund.options.address,
+        //     await genEnableInvestmentData(ETH_T_ADDR),
+        // )
     // )
 
     // const rez = await melonfund.methods.requestInvestment(
@@ -118,19 +120,37 @@ const main = async () => {
     //     50,
     //     ETH_T_ADDR,
     // ).send({
+        // from: (await w3.eth.getAccounts())[0],
+        // gas: 6000000,
+        // gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
+
+    // call approve
+    // const rez = await wEther.approve(melonfund.options.address, 1000000000000000000, {
     //     from: (await w3.eth.getAccounts())[0],
     //     gas: 6000000,
     //     gasPrice: w3.utils.toWei('2', 'shannon'),
     // })
 
-    // call approve
-    const rez =
+    const result = await melonfund.methods.executeRequest(await getLastRequestID()).send({
+        from: (await w3.eth.getAccounts())[0],
+        gas: 6000000,
+        gasPrice: w3.utils.toWei('2', 'shannon'),
+    })
+
+    console.log(result)
+
+    // const executeRequestData = genExecuteRequestData(4)
+    // const rez = await sendThruProxy(
+    //     melonfund.options.address,
+    //     executeRequestData,
+    // )
 
     // console.log(rez)
 
-    console.log(
-        await getLastRequestID()
-    )
+    // console.log(
+    //     await getLastRequestID()
+    // )
 
     // console.log(await melonfund.methods.isInvestAllowed(testAddr).call())
 
