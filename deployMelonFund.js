@@ -18,6 +18,7 @@ const AssetABI = require('./abis/AssetInterface');
 const MelonConditionalABI = require('./abis/MelonConditional');
 const ProxyWalletABI = require('./abis/ProxyWallet');
 const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
+const TransactionScanner = require('./TransactionScanner');
 
 /** Ether currency symbol */
 const etherSymbol = 'Ξ';
@@ -47,9 +48,11 @@ const contracts = {
     }
 }
 
+let defaultAccount;
+
 /** Main */
 const main = async () => {
-    const defaultAccount = (await pApi.eth.accounts())[0]
+    defaultAccount = (await pApi.eth.accounts())[0]
     const balance = await pApi.eth.getBalance(defaultAccount)
     console.log(`
 Using account: ${defaultAccount}
@@ -91,11 +94,10 @@ Account balance: ${balance/10**18}${etherSymbol}`)
         },
          opts,
     )
+
     const f = await Fund.deploy(
         deployFundOpts,
     ).send(opts)
-
-    // console.log(f)
 
     // const Pricefeed = new w3.eth.Contract(JSON.parse(fs.readFileSync('./out/PriceFeedInterface.abi')))
     // Pricefeed.options.address = '0x288A9fB92921472D29ab0b3C3e420a8E4Bd4f452'
@@ -179,7 +181,45 @@ async function setupStopLoss({ exchange, fund, buyAssetSymbol, priceToTriggerOrd
     console.log('conditional call data', conditionalCallData);
 
     const PROXY_WALLET_ADDRESS = '0xb6e014922fc35399994953908f91503c85a28abb';
-    const proxyWallet = new pApi.newContract(ProxyWalletABI, PROXY_WALLET_ADDRESS);
+    // const proxyWallet = new pApi.newContract(ProxyWalletABI, PROXY_WALLET_ADDRESS);
+
+    // const serializedScheduledTransaction = w3.utils.asciiToHex(scheduledTxCallData);
+
+    const transactionScanner = new TransactionScanner();
+
+    const serializedScheduledTransaction = transactionScanner.serialize(
+        1,
+        PROXY_WALLET_ADDRESS,
+        100000,
+        2666666,
+        5,
+        7345109,
+        9999999,
+        0,
+        0,
+        MELON_CONDITIONAL_ADDRESS,
+        w3.utils.asciiToHex(scheduledTxCallData),
+        conditionalCallData
+    );
+
+    // console.log({
+    //     serializedScheduleTransaction
+    // });
+
+    const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, PROXY_WALLET_ADDRESS)
+
+    const newInstance = await proxyWallet.methods.schedule(serializedScheduledTransaction).send({
+        from: defaultAccount,
+        gasLimit: 666666
+    });
+
+    console.log('proxywallet', newInstance);
+
+    // console
+
+    // proxyWallet.instance.schedule.call({}, [serializedScheduledTransaction]);
+
+    console.log('after schedule');
 }
 
 main()
