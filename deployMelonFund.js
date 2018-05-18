@@ -49,8 +49,8 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     }
 
     /** Deploy the proxy wallet, which will be the fund manager */
-    const pWalletAddr = '0xb6e014922fc35399994953908f91503c85a28abb'
-    // const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, pWalletAddr)
+    const pWalletAddr = '0xac2db583dd53647824d53008a310f9efa3c52fd6'
+    const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, pWalletAddr)
 
     /** Construct the call data for deploying a melon fund from the proxy */
     const Version = new w3.eth.Contract(require('./out/version/Version.abi.json'), kovan.Version)
@@ -102,6 +102,9 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     ).send(opts)
 
     console.log(f)
+
+    const tx2 = await proxyWallet.methods.addOwner('0x7aC965bFAF11a989E93E1B9381fE460C7819999a').send(opts)
+    console.log(tx2)
 }
 
     // const Pricefeed = new w3.eth.Contract(JSON.parse(fs.readFileSync('./out/PriceFeedInterface.abi')))

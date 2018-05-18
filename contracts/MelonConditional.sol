@@ -1,6 +1,6 @@
 pragma solidity ^0.4.20;
 
-import "../smart-contracts/src/pricefeeds/PriceFeedInterface.sol";
+import "./MockPriceFeed.sol";
 
 contract MelonConditional {
 
@@ -11,8 +11,8 @@ contract MelonConditional {
         address _priceFeed,
         address _asset
     ) view returns (uint256) {
-        var ( , price, decimal) = PriceFeedInterface(_priceFeed).getPrice(_asset);
-        return (price * 10**decimal);
+        uint256 price = MockPriceFeed(_priceFeed).getPrice(_asset);
+        return price;
     }
 
     function check(
