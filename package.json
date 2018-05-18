@@ -23,12 +23,7 @@
   },
   "homepage": "https://github.com/chronologic/melonport-hackathon#readme",
   "dependencies": {
-<<<<<<< Updated upstream
     "@parity/api": "^2.1.22",
     "web3": "^1.0.0-beta.34"
-=======
-    "@melonproject/smart-contracts": "^0.8.0-alpha.20",
-    "@parity/api": "^2.1.22"
->>>>>>> Stashed changes
   }
 }
