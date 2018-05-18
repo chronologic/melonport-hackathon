@@ -5,6 +5,7 @@ const w3 = new Web3(w3Provider)
 const MELON_FUND = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7'
 const PROXY_WALLET = '0x9968c5625db21bfcd5106f23c7cc174be35b680a'
 
+const ETH_T_ADDR = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'
 const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'
 
 const testAddr = "0x082D23A8bef5767662fA45F05aB77E7aF13feFeA"
@@ -54,12 +55,17 @@ const main = async () => {
         }
     }
 
-    const disableInvestmentData = melonfund.methods.disableInvestment([
-        testAddr,
-    ]).encodeABI()
-    const enableInvestmentData = melonfund.methods.enableInvestment([
-        testAddr,
-    ]).encodeABI()
+    const genEnableInvestmentData = (asset) => {
+        return melonfund.methods.enableInvestment([
+            asset,
+        ]).encodeABI()
+    }
+
+    const genDisabledInvestmentData = (asset) => {
+        return melonfund.methods.disabledInvestment([
+            asset,
+        ]).encodeABI()
+    }
 
     const genRequestInvestmentData = (
         giveQuant,
@@ -82,7 +88,7 @@ const main = async () => {
     }
 
     const melToken = new Asset(MELON_T_ADDR)
-    await melToken.transfer(PROXY_WALLET, 12, "0x", {
+    await melToken.transfer(PROXY_WALLET, 120000, "0x", {
         from: (await w3.eth.getAccounts())[0],
         gas: 6000000,
         gasPrice: w3.utils.toWei('2', 'shannon'),
@@ -90,13 +96,32 @@ const main = async () => {
 
     console.log(await melToken.balanceOf((await w3.eth.getAccounts())[0]))
 
+    const wEther = new Asset(ETH_T_ADDR)
+    await wEther.transfer(PROXY_WALLET, 120000, "0x", {
+        from: (await w3.eth.getAccounts())[0],
+        gas: 6000000,
+        gasPrice: w3.utils.toWei('2', 'shannon'),
+    })
+
+    console.log(await wEther.balanceOf((await w3.eth.getAccounts())[0]))
+
 
     // console.log(
-    //     await sendThruProxy(
-    //         melonfund.options.address,
-    //         enableInvestmentData,
-    //     )
+        await sendThruProxy(
+            melonfund.options.address,
+            await genEnableInvestmentData(ETH_T_ADDR),
+        )
     // )
+
+    melonfund.methods.requestInvestment(
+        23,
+        50,
+        ETH_T_ADDR,
+    ).send({
+        from: (await w3.eth.getAccounts())[0],
+        gas: 6000000,
+        gasPrice: w3.utils.toWei('2', 'shannon'),
+    })
 
     // console.log(await melonfund.methods.isInvestAllowed(testAddr).call())
 
