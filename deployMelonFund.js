@@ -53,7 +53,7 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     /** Deploy a new Melon fund */
     const opts = {
         from: defaultAccount,
-        gas: 4500000,
+        gas: 3000000,
         gasPrice: pApi.util.toWei('2', 'shannon'), // shannon === gwei... parity prefers the shannon terminology
     }
 
@@ -62,10 +62,10 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, pWalletAddr)
 
     /** Construct the call data for deploying a melon fund from the proxy */
-    const Fund = new w3.eth.Contract((require('./out/Fund.abi.json')))
+    const Fund = new w3.eth.Contract(JSON.parse(fs.readFileSync('./out/Fund.abi')))
     const deployFundOpts = Object.assign(
         {
-            data: fs.readFileSync('./out/Fund.bin'),
+            data: '0x' + fs.readFileSync('./out/Fund.bin').toString(),
             arguments: [
                 pWalletAddr, //ofManager
                 'CHRONOS_DEMO_FUND', //withName
@@ -81,17 +81,28 @@ Account balance: ${balance/10**18}${etherSymbol}`)
                 ],
                 [ //ofExchangeAdapters
                     contracts.kovan.MatchingMarketAdaptor,
-                ],
+                ]
             ]
         },
          opts,
     )
-    const f = Fund.deploy(
+    const f = await Fund.deploy(
         deployFundOpts,
-    )
+    ).send(opts)
 
-    console.log(f)
-    // console.log(await proxyWallet.methods.proxy(contracts.kovan.Version, contracts.kovan.Competition).send(opts))
+    // console.log(f)
+
+    // const Pricefeed = new w3.eth.Contract(JSON.parse(fs.readFileSync('./out/PriceFeedInterface.abi')))
+    // Pricefeed.options.address = '0x288A9fB92921472D29ab0b3C3e420a8E4Bd4f452'
+    // console.log(
+    //     await Pricefeed.methods.getQuoteAsset().call()
+    // )
+    // const deployPricefeedOpts = Object.assign(
+    //     {
+    //         data: '0x' + fs.readFileSync('./out/Pricefeed.bin').toString()
+    //     }
+    // )
+    
 
 
 }
