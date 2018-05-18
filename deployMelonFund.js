@@ -12,14 +12,19 @@ const w3 = new Web3(w3Provider)
 /** Parity provider set up */
 const provider = new parityApi.Provider.Http('http://localhost:8545')///#/auth?token=1f1Q-I0Hb-C50r-Gb3x')
 const pApi = new parityApi(provider)
+const PriceFeedInterfaceABI = require('./abis/PriceFeedInterface');
+const FundABI = require('./abis/FundInterface');
+const AssetABI = require('./abis/AssetInterface');
+const MelonConditionalABI = require('./abis/MelonConditional');
+const ProxyWalletABI = require('./abis/ProxyWallet');
+const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
 
 /** Ether currency symbol */
-const etherSymbol = 'Ξ'
+const etherSymbol = 'Ξ';
 
 /** Constants */
 const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'
 const ETH_T_ADDR = '0x26bB6da136a71Aa8D62D488BD3C91cC2151F029b'
-
 
 /** Kovan contracts */
 const contracts = {
@@ -102,9 +107,79 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     //         data: '0x' + fs.readFileSync('./out/Pricefeed.bin').toString()
     //     }
     // )
-    
 
+    // await setupStopLoss({
+    //     fund: '0x3BeBf94Ab7e9Da434137EFb8226eA8d50AA97389',
+    //     sellAssetSymbol: 'ETH-T-M',
+    //     buyAssetSymbol: 'MLN-T-M',
+    //     priceToTriggerOrder: '10000001200836273000',
+    //     exchange: 0
+    // });
+}
 
+async function getFundPriceFeedAddress(fund) {
+    return (await fund.instance.getModules.call())[0];
+}
+
+async function getAssetPrice(priceFeed, assetAddress) {
+    const [, price] = await priceFeed.instance.getPrice.call({}, [assetAddress]);
+
+    return price;
+}
+
+async function getFundHeldAssetQuantity(fund, assetAddress) {
+    const asset = await pApi.newContract(AssetABI, assetAddress);
+
+    return await asset.instance.balanceOf.call({}, [fund]);
+}
+
+async function setupStopLoss({ exchange, fund, buyAssetSymbol, priceToTriggerOrder, sellAssetSymbol }) {
+    const buyAssetAddress = tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
+    const sellAssetAddress = tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
+
+    const fundContract = await pApi.newContract(FundABI, fund);
+
+    const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
+    const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, priceFeedAddress);
+
+    const sellAssetPrice = await getAssetPrice(priceFeed, sellAssetAddress);
+
+    // SELL ALL | CAN BE CUSTOMIZED IN FUTURE
+    const sellAssetQuantity = await getFundHeldAssetQuantity(fund, sellAssetAddress);
+
+    console.log('sellAssetPrice', sellAssetPrice.toFixed());
+
+    console.log('held', sellAssetQuantity.toFixed());
+
+    const buyQuantity = sellAssetQuantity.div(10**18).mul(sellAssetPrice);
+
+    console.log('buy Quantity', buyQuantity.toFixed());
+
+    const scheduledTxCallData = fundContract.getCallData(fundContract.instance.makeOrder, {}, [
+        exchange,
+        sellAssetAddress,
+        buyAssetAddress,
+        sellAssetQuantity,
+        buyQuantity
+    ]);
+
+    console.log('scheduled tx call data (fundContract.makeOrder)', scheduledTxCallData);
+
+    const MELON_CONDITIONAL_ADDRESS = '0xafb8e29e227202973e53ae5f412c79740f387150';
+
+    const melonConditional = new pApi.newContract(MelonConditionalABI, MELON_CONDITIONAL_ADDRESS);
+
+    const conditionalCallData = melonConditional.getCallData(melonConditional.instance.check, {}, [
+        priceFeedAddress,
+        sellAssetAddress,
+        priceToTriggerOrder,
+        '<='
+    ]);
+
+    console.log('conditional call data', conditionalCallData);
+
+    const PROXY_WALLET_ADDRESS = '0xb6e014922fc35399994953908f91503c85a28abb';
+    const proxyWallet = new pApi.newContract(ProxyWalletABI, PROXY_WALLET_ADDRESS);
 }
 
 main()
