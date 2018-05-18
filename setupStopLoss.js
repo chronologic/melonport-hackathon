@@ -14,13 +14,13 @@ const PriceFeedInterfaceABI = require('./abis/PriceFeedInterface');
 const FundABI = require('./abis/FundInterface');
 const AssetABI = require('./abis/AssetInterface');
 const MelonConditionalABI = require('./abis/MelonConditional');
-const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
+const tokenInfo = require('./node_modules/@melonproject/smart-contracts/utils/info/tokenInfo');
 const TransactionScanner = require('./TransactionScanner');
 
 const BigNumber = require('bignumber.js');
 
 const PROXY_WALLET_ADDRESS = '0x9968c5625db21bfcd5106f23c7cc174be35b680a';
-const MELON_CONDITIONAL_ADDRESS = '0xafb8e29e227202973e53ae5f412c79740f387150';
+const MELON_CONDITIONAL_ADDRESS = '0xb78d54d5578f94171afc6cedcd59b1e53d71dbf8';
 const FUND_ADDRESS = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7';
 const etherSymbol = 'Ξ';
 const ACCOUNT_INDEX = 1;
@@ -91,15 +91,17 @@ Tx hash: ${receipt.transactionHash}
 }
 
 async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToTriggerOrder, sellAssetSymbol }) {
-    const buyAssetAddress = tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
-    const sellAssetAddress = tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
+    // console.log(tokenInfo.kovan)
+    const buyAssetAddress = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'//tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
+    const sellAssetAddress = '0x9f9e3342b8666859625b1a1b90a319e9f7784c2f'//tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
 
     const fundContract = await pApi.newContract(FundABI, fund);
 
-    const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
+    const priceFeedAddress = '0x9f9e3342b8666859625b1a1b90a319e9f7784c2f'
+    // const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
     const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, priceFeedAddress);
 
-    const sellAssetPrice = await getAssetPrice(priceFeed, sellAssetAddress);
+    const sellAssetPrice = 100// await getAssetPrice(priceFeed, sellAssetAddress);
 
     //SELL ALL | CAN BE CUSTOMIZED IN FUTURE
     const sellAssetQuantity = await getFundHeldAssetQuantity(fund, sellAssetAddress);
@@ -127,7 +129,7 @@ async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToT
     const conditionalCallData = melonConditional.getCallData(melonConditional.instance.check, {}, [
         priceFeedAddress,
         sellAssetAddress,
-        priceToTriggerOrder,
+        sellAssetPrice,
         '<='
     ]);
 
@@ -159,7 +161,7 @@ async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToT
 }
 
 async function main() {
-    const defaultAccount = (await pApi.eth.accounts())[ACCOUNT_INDEX];
+    const defaultAccount = (await pApi.eth.accounts())[0];
     const balance = await pApi.eth.getBalance(defaultAccount);
     console.log(`
 Using account: ${defaultAccount}
