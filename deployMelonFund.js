@@ -12,13 +12,15 @@ const w3 = new Web3(w3Provider)
 /** Parity provider set up */
 const provider = new parityApi.Provider.Http('http://localhost:8545')///#/auth?token=1f1Q-I0Hb-C50r-Gb3x')
 const pApi = new parityApi(provider)
-// const PriceFeedInterfaceABI = require('./abis/PriceFeedInterface');
-// const FundABI = require('./abis/FundInterface');
-// const AssetABI = require('./abis/AssetInterface');
-// const MelonConditionalABI = require('./abis/MelonConditional');
-// const ProxyWalletABI = require('./abis/ProxyWallet');
-// const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
+const PriceFeedInterfaceABI = require('./abis/PriceFeedInterface');
+const FundABI = require('./abis/FundInterface');
+const AssetABI = require('./abis/AssetInterface');
+const MelonConditionalABI = require('./abis/MelonConditional');
+const ProxyWalletABI = require('./abis/ProxyWallet');
+const tokenInfo = require('./smart-contracts/utils/info/tokenInfo');
 const TransactionScanner = require('./TransactionScanner');
+
+const BigNumber = require('bignumber.js');
 
 /** Ether currency symbol */
 const etherSymbol = 'Ξ';
@@ -26,6 +28,9 @@ const etherSymbol = 'Ξ';
 /** Constants */
 const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'
 const ETH_T_ADDR = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'
+const PROXY_WALLET_ADDRESS = '0x9968c5625db21bfcd5106f23c7cc174be35b680a';
+const MELON_CONDITIONAL_ADDRESS = '0xafb8e29e227202973e53ae5f412c79740f387150';
+const FUND_ADDRESS = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7';
 
 /** Kovan contracts */
 const kovan = require('./addressBook.json').kovan
@@ -35,7 +40,7 @@ let defaultAccount;
 
 /** Main */
 const main = async () => {
-    defaultAccount = (await pApi.eth.accounts())[0]
+    defaultAccount = (await pApi.eth.accounts())[1]
     const balance = await pApi.eth.getBalance(defaultAccount)
     console.log(`
 Using account: ${defaultAccount}
@@ -97,15 +102,14 @@ Account balance: ${balance/10**18}${etherSymbol}`)
         opts,
     )
 
-    const f = await Fund.deploy(
-        deployFundOpts,
-    ).send(opts)
+    // const f = await Fund.deploy(
+    //     deployFundOpts,
+    // ).send(opts)
 
-    console.log(f)
+    // console.log(f)
 
-    const tx2 = await proxyWallet.methods.addOwner('0x7aC965bFAF11a989E93E1B9381fE460C7819999a').send(opts)
-    console.log(tx2)
-}
+    // const tx2 = await proxyWallet.methods.addOwner('0x7aC965bFAF11a989E93E1B9381fE460C7819999a').send(opts)
+    // console.log(tx2)
 
     // const Pricefeed = new w3.eth.Contract(JSON.parse(fs.readFileSync('./out/PriceFeedInterface.abi')))
     // Pricefeed.options.address = '0x288A9fB92921472D29ab0b3C3e420a8E4Bd4f452'
@@ -118,115 +122,147 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     //     }
     // )
 
-    // await setupStopLoss({
-    //     fund: '0x3BeBf94Ab7e9Da434137EFb8226eA8d50AA97389',
-    //     sellAssetSymbol: 'ETH-T-M',
-    //     buyAssetSymbol: 'MLN-T-M',
-    //     priceToTriggerOrder: '10000001200836273000',
-    //     exchange: 0
-    // });
+    await setupStopLoss({
+        fund: FUND_ADDRESS,
+        sellAssetSymbol: 'MLN-T-M',
+        buyAssetSymbol: 'ETH-T-M',
+        priceToTriggerOrder: '10000001200836273000',
+        exchange: 0
+    });
+}
 
-// async function getFundPriceFeedAddress(fund) {
-//     return (await fund.instance.getModules.call())[0];
-// }
+async function getFundPriceFeedAddress(fund) {
+    return (await fund.instance.getModules.call())[0];
+}
 
-// async function getAssetPrice(priceFeed, assetAddress) {
-//     const [, price] = await priceFeed.instance.getPrice.call({}, [assetAddress]);
+async function getAssetPrice(priceFeed, assetAddress) {
+    const [, price] = await priceFeed.instance.getPrice.call({}, [assetAddress]);
 
-//     return price;
-// }
+    return price;
+}
 
-// async function getFundHeldAssetQuantity(fund, assetAddress) {
-//     const asset = await pApi.newContract(AssetABI, assetAddress);
+async function getFundHeldAssetQuantity(fund, assetAddress) {
+    const asset = await pApi.newContract(AssetABI, assetAddress);
 
-//     return await asset.instance.balanceOf.call({}, [fund]);
-// }
+    return await asset.instance.balanceOf.call({}, [fund]);
+}
 
-// async function setupStopLoss({ exchange, fund, buyAssetSymbol, priceToTriggerOrder, sellAssetSymbol }) {
-//     const buyAssetAddress = tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
-//     const sellAssetAddress = tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
+function getSerializedScheduledTransaction({
+    callGas,
+    gasPrice,
+    toAddress,
+    conditionCheckAddress,
+    conditionalCallData,
+    callData
+}) {
+    const EXECUTION_WINDOW_START = 7346109;
 
-//     const fundContract = await pApi.newContract(FundABI, fund);
+    const transactionScanner = new TransactionScanner();
 
-//     const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
-//     const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, priceFeedAddress);
+    const endowment = callGas * gasPrice;
 
-//     const sellAssetPrice = await getAssetPrice(priceFeed, sellAssetAddress);
+    return {
+        data: transactionScanner.serialize(
+            1,
+            PROXY_WALLET_ADDRESS,
+            0,
+            callGas,
+            gasPrice,
+            EXECUTION_WINDOW_START,
+            9999,
+            0,
+            0,
+            conditionCheckAddress,
+            callData,
+            conditionalCallData
+        ),
+        value: endowment
+    };
+}
 
-    // SELL ALL | CAN BE CUSTOMIZED IN FUTURE
-    // const sellAssetQuantity = await getFundHeldAssetQuantity(fund, sellAssetAddress);
+function humanizeNumberDisplay(number) {
+    const bn = new BigNumber(number);
 
-    // console.log('sellAssetPrice', sellAssetPrice.toFixed());
+    return bn.div(10**18).toFixed(2);
+}
 
-    // console.log('held', sellAssetQuantity.toFixed());
+function showFinalSchedulingMessage({ sellAssetSymbol, buyAssetSymbol, priceToTriggerOrder, receipt }) {
+    console.log(`
+STOP LOSS SUCESSFULLY SETUP.
 
-    // const buyQuantity = sellAssetQuantity.div(10**18).mul(sellAssetPrice);
+"${sellAssetSymbol}" will be sold for "${buyAssetSymbol}" when the price of "${sellAssetSymbol}" drops to ${humanizeNumberDisplay(priceToTriggerOrder)}.
 
-    // console.log('buy Quantity', buyQuantity.toFixed());
+Tx hash: ${receipt.transactionHash}
+    `);
+}
 
-    // const scheduledTxCallData = fundContract.getCallData(fundContract.instance.makeOrder, {}, [
-    //     exchange,
-    //     sellAssetAddress,
-    //     buyAssetAddress,
-    //     sellAssetQuantity,
-    //     buyQuantity
-    // ]);
+async function setupStopLoss({ exchange, fund, buyAssetSymbol, priceToTriggerOrder, sellAssetSymbol }) {
+    const buyAssetAddress = tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
+    const sellAssetAddress = tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
 
-    // console.log('scheduled tx call data (fundContract.makeOrder)', scheduledTxCallData);
+    const fundContract = await pApi.newContract(FundABI, fund);
 
-    // const MELON_CONDITIONAL_ADDRESS = '0xafb8e29e227202973e53ae5f412c79740f387150';
+    const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
+    const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, priceFeedAddress);
 
-    // const melonConditional = new pApi.newContract(MelonConditionalABI, MELON_CONDITIONAL_ADDRESS);
+    const sellAssetPrice = await getAssetPrice(priceFeed, sellAssetAddress);
 
-    // const conditionalCallData = melonConditional.getCallData(melonConditional.instance.check, {}, [
-    //     priceFeedAddress,
-    //     sellAssetAddress,
-    //     priceToTriggerOrder,
-    //     '<='
-    // ]);
+    //SELL ALL | CAN BE CUSTOMIZED IN FUTURE
+    const sellAssetQuantity = await getFundHeldAssetQuantity(fund, sellAssetAddress);
 
-    // console.log('conditional call data', conditionalCallData);
+    console.log('sellAssetPrice', sellAssetPrice.toFixed());
 
-    // const PROXY_WALLET_ADDRESS = '0xb6e014922fc35399994953908f91503c85a28abb';
-    // // const proxyWallet = new pApi.newContract(ProxyWalletABI, PROXY_WALLET_ADDRESS);
+    console.log('held', sellAssetQuantity.toFixed());
 
-    // // const serializedScheduledTransaction = w3.utils.asciiToHex(scheduledTxCallData);
+    const buyQuantity = sellAssetQuantity.div(10**18).mul(sellAssetPrice);
 
-    // const transactionScanner = new TransactionScanner();
+    console.log('buy Quantity', buyQuantity.toFixed());
 
-    // const serializedScheduledTransaction = transactionScanner.serialize(
-    //     1,
-    //     PROXY_WALLET_ADDRESS,
-    //     0,
-    //     4500000,
-    //     5,
-    //     7345109,
-    //     9999999,
-    //     0,
-    //     0,
-    //     MELON_CONDITIONAL_ADDRESS,
-    //     w3.utils.asciiToHex(scheduledTxCallData),
-    //     conditionalCallData
-    // );
+    const makeOrderCallData = fundContract.getCallData(fundContract.instance.makeOrder, {}, [
+        exchange,
+        sellAssetAddress,
+        buyAssetAddress,
+        sellAssetQuantity,
+        buyQuantity
+    ]);
 
-    // // console.log({
-    // //     serializedScheduleTransaction
-    // // });
+    // console.log('scheduled tx call data (fundContract.makeOrder)', makeOrderCallData);
 
-    // const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, PROXY_WALLET_ADDRESS)
+    const melonConditional = new pApi.newContract(MelonConditionalABI, MELON_CONDITIONAL_ADDRESS);
 
-    // const newInstance = await proxyWallet.methods.schedule(serializedScheduledTransaction).send({
-    //     from: defaultAccount,
-    //     gasLimit: 666666
-    // });
+    const conditionalCallData = melonConditional.getCallData(melonConditional.instance.check, {}, [
+        priceFeedAddress,
+        sellAssetAddress,
+        priceToTriggerOrder,
+        '<='
+    ]);
 
-    // console.log('proxywallet', newInstance);
+    const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, PROXY_WALLET_ADDRESS)
 
-    // console
+    const proxyCallData = proxyWallet.methods.proxy(fund, makeOrderCallData).encodeABI();
 
-    // proxyWallet.instance.schedule.call({}, [serializedScheduledTransaction]);
+    const { data: serializedScheduledTransaction, value } = getSerializedScheduledTransaction({
+        callGas: 300000,
+        gasPrice: pApi.util.toWei('2', 'shannon').toFixed(),
+        toAddress: PROXY_WALLET_ADDRESS,
+        conditionCheckAddress: MELON_CONDITIONAL_ADDRESS,
+        conditionalCallData,
+        callData: proxyCallData
+    });
 
-    // console.log('after schedule');
+    const receipt = await proxyWallet.methods.schedule(serializedScheduledTransaction).send({
+        from: defaultAccount,
+        gasLimit: 777666,
+        value
+    });
+
+    showFinalSchedulingMessage({
+        sellAssetSymbol,
+        buyAssetSymbol,
+        priceToTriggerOrder,
+        receipt
+    });
+}
 
 main()
   .catch(console.log)
