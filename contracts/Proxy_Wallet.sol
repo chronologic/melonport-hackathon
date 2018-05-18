@@ -10,7 +10,7 @@ contract Proxy_Wallet {
         whitelist[msg.sender] = true;
         scheduler = Scheduler(_chronosScheduler);
     }
-    
+
     function addOwner(address _owner) isWhitelisted(msg.sender) {
         whitelist[_owner] = true;
     }
