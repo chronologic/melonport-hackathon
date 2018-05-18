@@ -113,15 +113,24 @@ const main = async () => {
         )
     // )
 
-    melonfund.methods.requestInvestment(
-        23,
-        50,
-        ETH_T_ADDR,
-    ).send({
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    // const rez = await melonfund.methods.requestInvestment(
+    //     23,
+    //     50,
+    //     ETH_T_ADDR,
+    // ).send({
+    //     from: (await w3.eth.getAccounts())[0],
+    //     gas: 6000000,
+    //     gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
+
+    // call approve
+    const rez =
+
+    // console.log(rez)
+
+    console.log(
+        await getLastRequestID()
+    )
 
     // console.log(await melonfund.methods.isInvestAllowed(testAddr).call())
 
