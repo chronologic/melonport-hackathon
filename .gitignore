@@ -2,3 +2,4 @@ timenode
 runKovan.sh
 password
 node_modules
+yarn-error.log
