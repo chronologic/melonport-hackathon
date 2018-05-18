@@ -1,13 +1,25 @@
 const fs = require('fs')
 
 const parityApi = require('@parity/api')
+// const pContract = require('@parity/api/lib/contract')
+
+/** Web3 setup */
+const Web3 = require('web3')
+const w3Provider = new Web3.providers.HttpProvider('http://localhost:8545')
+const w3 = new Web3(w3Provider)
+/** */
 
 /** Parity provider set up */
-const provider = new parityApi.Provider.Http('http://localhost:8545')
+const provider = new parityApi.Provider.Http('http://localhost:8545')///#/auth?token=1f1Q-I0Hb-C50r-Gb3x')
 const pApi = new parityApi(provider)
 
 /** Ether currency symbol */
 const etherSymbol = 'Ξ'
+
+/** Constants */
+const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'
+const ETH_T_ADDR = '0x26bB6da136a71Aa8D62D488BD3C91cC2151F029b'
+
 
 /** Kovan contracts */
 const contracts = {
@@ -46,15 +58,42 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     }
 
     /** Deploy the proxy wallet, which will be the fund manager */
-    const Proxy_Wallet_ABI = fs.readFileSync('./tmp/Proxy_Wallet.abi')
-    const Proxy_Wallet_Bytecode = fs.readFileSync('./tmp/Proxy_Wallet.bin')
+    const pWalletAddr = '0xb6e014922fc35399994953908f91503c85a28abb'
+    const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, pWalletAddr)
 
-    // console.log(pApi)
-    console.log(JSON.parse(Proxy_Wallet_ABI.toString()))
-    const c = pApi.newContract(pApi.eth, JSON.parse(Proxy_Wallet_ABI.toString()))
-    // console.log(c)
-    // const c2 = await c.deploy('0x0e0EF6257569b428c058317722494f21Df38E1C2')
-    // console.log(c2)
+    /** Construct the call data for deploying a melon fund from the proxy */
+    const Fund = new w3.eth.Contract((require('./out/Fund.abi.json')))
+    const deployFundOpts = Object.assign(
+        {
+            data: fs.readFileSync('./out/Fund.bin'),
+            arguments: [
+                pWalletAddr, //ofManager
+                'CHRONOS_DEMO_FUND', //withName
+                MELON_T_ADDR, //ofQuoteAsset
+                0, //ofManagementFee
+                0, //ofPerformanceFee
+                ETH_T_ADDR, //ofNativeAsset
+                '0xea674068083170F668Ce6C496Ac60eD31205d064', //ofCompliance,
+                '0x8F014d79ae8a6ac9b245B96dEE107AeFDb636b60', //ofRiskMgmt,
+                '0x288A9fB92921472D29ab0b3C3e420a8E4Bd4f452', //ofPriceFee,
+                [ //ofExchanges
+                    contracts.kovan.MatchingMarket,
+                ],
+                [ //ofExchangeAdapters
+                    contracts.kovan.MatchingMarketAdaptor,
+                ],
+            ]
+        },
+         opts,
+    )
+    const f = Fund.deploy(
+        deployFundOpts,
+    )
+
+    console.log(f)
+    // console.log(await proxyWallet.methods.proxy(contracts.kovan.Version, contracts.kovan.Competition).send(opts))
+
+
 }
 
 main()

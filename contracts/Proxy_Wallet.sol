@@ -31,7 +31,7 @@ contract Proxy_Wallet {
 
     function proxy(
         address _target,
-        address _callData
+        bytes _callData
     ) isWhitelisted payable {
         _target.call.value(msg.value)(_callData);
     }

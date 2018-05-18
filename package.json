@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/chronologic/melonport-hackathon#readme",
   "dependencies": {
-    "@parity/api": "^2.1.22"
+    "@parity/api": "^2.1.22",
+    "web3": "^1.0.0-beta.34"
   }
 }
