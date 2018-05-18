@@ -20,9 +20,10 @@ contract Proxy_Wallet {
     // }
 
     function schedule(bytes _serializedTransaction)
+        payable
         isWhitelisted(msg.sender)
     {
-        address scheduledTransaction = scheduler.schedule(_serializedTransaction);
+        address scheduledTransaction = scheduler.schedule.value(msg.value)(_serializedTransaction);
         //sanity
         require(scheduledTransaction != 0x0);
         whitelist[scheduledTransaction] = true;

@@ -49,7 +49,7 @@ Account balance: ${balance/10**18}${etherSymbol}`)
     }
 
     /** Deploy the proxy wallet, which will be the fund manager */
-    const pWalletAddr = '0xac2db583dd53647824d53008a310f9efa3c52fd6'
+    const pWalletAddr = '0x9968c5625db21bfcd5106f23c7cc174be35b680a'
     const proxyWallet = new w3.eth.Contract(require('./build/contracts/Proxy_Wallet.json').abi, pWalletAddr)
 
     /** Construct the call data for deploying a melon fund from the proxy */
