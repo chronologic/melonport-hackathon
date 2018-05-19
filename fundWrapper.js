@@ -3,7 +3,7 @@ const w3Provider = new Web3.providers.HttpProvider('http://localhost:8545')
 const w3 = new Web3(w3Provider)
 
 const MELON_FUND = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7'
-const PROXY_WALLET = '0x791f2b5a5b44779dc5950c6fc619ce2d50928cfe'
+const PROXY_WALLET = '0x9968c5625db21bfcd5106f23c7cc174be35b680a'
 
 const ETH_T_ADDR = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'
 const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'
@@ -37,10 +37,10 @@ const main = async () => {
 
     const sendThruProxy = async (dest, encoded, v) => {
         const opts = {
-            from: (await w3.eth.getAccounts())[0],
+            from: (await w3.eth.getAccounts())[1],
             gas: 6000000,
             gasPrice: w3.utils.toWei('2', 'shannon'),
-            value: v ? v : 0, 
+            value: v ? v : 0,
         }
         // console.log(dest, encoded)
 
@@ -115,38 +115,42 @@ const main = async () => {
         // )
     // )
 
-    const rez = await melonfund.methods.requestInvestment(
-        1000,
-        1000,
-        ETH_T_ADDR,
-    ).send({
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    // const rez = await melonfund.methods.requestInvestment(
+    //     1000,
+    //     1000,
+    //     ETH_T_ADDR,
+    // ).send({
+    //     from: (await w3.eth.getAccounts())[0],
+    //     gas: 6000000,
+    //     gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
 
-    console.log(rez)
+    // console.log(rez)
 
-    const lastRequestID = await getLastRequestID()
-    console.log(lastRequestID)
+    // const lastRequestID = await getLastRequestID()
+    // console.log(lastRequestID)
 
     // call approve
-    const rez2 = await wEther.approve(melonfund.options.address, 1000000000000000000, {
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    const rez2 = await wEther.instance.methods.transfer('0x733c3696086926ebba057723f22aff2c12fb803e', 1000000).encodeABI()
 
     console.log(rez2)
 
+    const rec = await sendThruProxy(
+        ETH_T_ADDR,
+        rez2,
+    );
 
-    const result = await melonfund.methods.executeRequest(lastRequestID).send({
-        from: (await w3.eth.getAccounts())[0],
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
-    })
+    console.log('pro rec', rec);
 
-    console.log(result)
+
+
+    // const result = await melonfund.methods.executeRequest(lastRequestID).send({
+    //     from: (await w3.eth.getAccounts())[0],
+    //     gas: 6000000,
+    //     gasPrice: w3.utils.toWei('2', 'shannon'),
+    // })
+
+    // console.log(result)
 
     // const executeRequestData = genExecuteRequestData(4)
     // const rez = await sendThruProxy(

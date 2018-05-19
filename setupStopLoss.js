@@ -15,13 +15,12 @@ const FundABI = require('./abis/FundInterface');
 const AssetABI = require('./abis/AssetInterface');
 const MelonConditionalABI = require('./abis/MelonConditional');
 const tokenInfo = require('./node_modules/@melonproject/smart-contracts/utils/info/tokenInfo');
-const TransactionScanner = require('./TransactionScanner');
-
-const BigNumber = require('bignumber.js');
+const TransactionSerializer = require('./TransactionSerializer');
 
 const PROXY_WALLET_ADDRESS = '0x791f2b5a5b44779dc5950c6fc619ce2d50928cfe';
 const MELON_CONDITIONAL_ADDRESS = '0xb78d54d5578f94171afc6cedcd59b1e53d71dbf8';
-const FUND_ADDRESS = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7';
+const FUND_ADDRESS = '0x733c3696086926ebba057723f22aff2c12fb803e';
+const MOCK_PRICE_FEED = '0x00d67533e08b7ed97577e364f4b8eb4932e980b5';
 const etherSymbol = 'Ξ';
 const ACCOUNT_INDEX = 1;
 
@@ -51,12 +50,12 @@ function getSerializedScheduledTransaction({
 }) {
     const EXECUTION_WINDOW_START = 7346109;
 
-    const transactionScanner = new TransactionScanner();
+    const serializer = new TransactionSerializer();
 
     const endowment = callGas * gasPrice;
 
     return {
-        data: transactionScanner.serialize(
+        data: serializer.serialize(
             1,
             toAddress,
             0,
@@ -74,36 +73,28 @@ function getSerializedScheduledTransaction({
     };
 }
 
-function humanizeNumberDisplay(number) {
-    const bn = new BigNumber(number);
-
-    return bn.div(10**18).toFixed(2);
-}
-
 function showFinalSchedulingMessage({ sellAssetSymbol, buyAssetSymbol, priceToTriggerOrder, receipt }) {
     console.log(`
 STOP LOSS SUCESSFULLY SETUP.
 
-"${sellAssetSymbol}" will be sold for "${buyAssetSymbol}" when the price of "${sellAssetSymbol}" drops to ${humanizeNumberDisplay(priceToTriggerOrder)}.
+"${sellAssetSymbol}" will be sold for "${buyAssetSymbol}" when the price of "${sellAssetSymbol}" drops to ${priceToTriggerOrder}.
 
 Tx hash: ${receipt.transactionHash}
     `);
 }
 
 async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToTriggerOrder, sellAssetSymbol }) {
-    // console.log(tokenInfo.kovan)
-    const buyAssetAddress = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'//tokenInfo.kovan.find(token => token.symbol === buyAssetSymbol).address;
-    const sellAssetAddress = '0x9f9e3342b8666859625b1a1b90a319e9f7784c2f'//tokenInfo.kovan.find(token => token.symbol === sellAssetSymbol).address;
+    const buyAssetAddress = tokenInfo.kovan[buyAssetSymbol].address;
+    const sellAssetAddress = tokenInfo.kovan[sellAssetSymbol].address;
 
     const fundContract = await pApi.newContract(FundABI, fund);
 
-    const priceFeedAddress = '0x9f9e3342b8666859625b1a1b90a319e9f7784c2f'
-    // const priceFeedAddress = await getFundPriceFeedAddress(fundContract);
+    const priceFeedAddress = MOCK_PRICE_FEED; // getFundPriceFeedAddress(fundContract)
     const priceFeed = await pApi.newContract(PriceFeedInterfaceABI, priceFeedAddress);
 
-    const sellAssetPrice = 100// await getAssetPrice(priceFeed, sellAssetAddress);
+    const sellAssetPrice = await getAssetPrice(priceFeed, sellAssetAddress);
 
-    //SELL ALL | CAN BE CUSTOMIZED IN FUTURE
+    // SELL ALL | CAN BE CUSTOMIZED IN FUTURE
     const sellAssetQuantity = await getFundHeldAssetQuantity(fund, sellAssetAddress);
 
     console.log('sellAssetPrice', sellAssetPrice.toFixed());
@@ -112,24 +103,22 @@ async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToT
 
     const buyQuantity = sellAssetQuantity.div(10**18).mul(sellAssetPrice);
 
-    console.log('buy Quantity', buyQuantity.toFixed());
+    console.log('buy quantity', buyQuantity.toFixed());
 
-    const makeOrderCallData = fundContract.getCallData(fundContract.instance.makeOrder, {}, [
+    const makeOrderCallData = w3.utils.asciiToHex(fundContract.getCallData(fundContract.instance.makeOrder, {}, [
         exchange,
         sellAssetAddress,
         buyAssetAddress,
         sellAssetQuantity,
         buyQuantity
-    ]);
-
-    // console.log('scheduled tx call data (fundContract.makeOrder)', makeOrderCallData);
+    ]));
 
     const melonConditional = new pApi.newContract(MelonConditionalABI, MELON_CONDITIONAL_ADDRESS);
 
     const conditionalCallData = melonConditional.getCallData(melonConditional.instance.check, {}, [
         priceFeedAddress,
         sellAssetAddress,
-        sellAssetPrice,
+        priceToTriggerOrder,
         '<='
     ]);
 
@@ -138,7 +127,7 @@ async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToT
     const proxyCallData = proxyWallet.methods.proxy(fund, makeOrderCallData).encodeABI();
 
     const { data: serializedScheduledTransaction, value } = getSerializedScheduledTransaction({
-        callGas: 300000,
+        callGas: 400000,
         gasPrice: pApi.util.toWei('2', 'shannon').toFixed(),
         toAddress: PROXY_WALLET_ADDRESS,
         conditionCheckAddress: MELON_CONDITIONAL_ADDRESS,
@@ -161,7 +150,7 @@ async function setupStopLoss({ account, exchange, fund, buyAssetSymbol, priceToT
 }
 
 async function main() {
-    const defaultAccount = (await pApi.eth.accounts())[0];
+    const defaultAccount = (await pApi.eth.accounts())[ACCOUNT_INDEX];
     const balance = await pApi.eth.getBalance(defaultAccount);
     console.log(`
 Using account: ${defaultAccount}
@@ -170,9 +159,9 @@ Account balance: ${balance/10**18}${etherSymbol}`);
     await setupStopLoss({
         account: defaultAccount,
         fund: FUND_ADDRESS,
-        sellAssetSymbol: 'MLN-T-M',
-        buyAssetSymbol: 'ETH-T-M',
-        priceToTriggerOrder: '10000001200836273000',
+        sellAssetSymbol: 'WETH-T',
+        buyAssetSymbol: 'MLN-T',
+        priceToTriggerOrder: 100,
         exchange: 0
     });
 }
