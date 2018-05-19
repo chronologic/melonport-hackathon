@@ -67,6 +67,17 @@ const main = async () => {
         console.log('Success! Approved Matching Market to transfer Ether Asset from Proxy Wallet')
         console.log('Check it on etherscan: ' + receipt.transactionHash)
     }
+
+    /** Sanity */
+    const allowance = await etherAsset.allowance(
+        proxyWallet.options.address,
+        MATCHING_MARKET,   
+    )
+    if (parseInt(allowance) === 1*10**16) {
+        console.log('sanity passed')
+    } else {
+        console.error('SANITY FAILED')
+    }
 }
 
 

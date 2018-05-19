@@ -116,15 +116,20 @@ const main = async () => {
         callData: proxyCallData,
     })
 
-    console.log(serializedScheduledTransaction)
-    console.log(value)
+    // console.log(serializedScheduledTransaction)
+    // console.log(value)
 
     const receipt = await proxyWallet.methods.schedule(
         serializedScheduledTransaction,
     ).send(Object.assign({ value }, opts))
 
-    console.log(receipt)
+    if (receipt.status === true) {
+        console.log('Success! Scheduled a make order transaction.')
+        console.log('Check it on etherscan: ' + receipt.transactionHash)
+    } else {
+        console.error(' failed')
+    }
 }
 
 main()
-  .catch(console.log)
+  .catch(console.error)

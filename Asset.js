@@ -18,7 +18,9 @@ class Asset {
         return this.instance.methods.approve(spender, value).send(opts)
     }
 
-    // allowance(owner, )
+    allowance(owner, spender) {
+        return this.instance.methods.allowance(owner, spender).call()
+    }
 
     transfer(to, value, data, opts) {
         return this.instance.methods.transfer(to, value, data).send(opts)
