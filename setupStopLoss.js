@@ -19,7 +19,7 @@ const TransactionScanner = require('./TransactionScanner');
 
 const BigNumber = require('bignumber.js');
 
-const PROXY_WALLET_ADDRESS = '0x9968c5625db21bfcd5106f23c7cc174be35b680a';
+const PROXY_WALLET_ADDRESS = '0x791f2b5a5b44779dc5950c6fc619ce2d50928cfe';
 const MELON_CONDITIONAL_ADDRESS = '0xb78d54d5578f94171afc6cedcd59b1e53d71dbf8';
 const FUND_ADDRESS = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7';
 const etherSymbol = 'Ξ';

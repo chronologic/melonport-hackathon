@@ -3,7 +3,7 @@ const w3Provider = new Web3.providers.HttpProvider('http://localhost:8545')
 const w3 = new Web3(w3Provider)
 
 const MELON_FUND = '0xe9f0237826557e2532aa86fdc1ab0ad0c50f29f7'
-const PROXY_WALLET = '0x9968c5625db21bfcd5106f23c7cc174be35b680a'
+const PROXY_WALLET = '0x791f2b5a5b44779dc5950c6fc619ce2d50928cfe'
 
 const ETH_T_ADDR = '0xa27Af8713623fCc239d49108B1A7b187c133e88B'
 const MELON_T_ADDR = '0xDC5fC5DaB642f688Bc5BB58bEF6E0d452D7ae123'

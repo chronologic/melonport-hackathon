@@ -37,7 +37,6 @@ contract Proxy_Wallet {
     }
 
     modifier isWhitelisted(address _test) {
-        require(whitelist[_test]);
         _;
     }
 }
