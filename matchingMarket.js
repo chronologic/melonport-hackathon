@@ -10,30 +10,60 @@ const MATCHING_MARKET = '0xe23E971aCCa1Ab30017C5ee01080C56b8335c394'
 
 const Asset = require('./Asset')
 
-const main = async () => {
-    const matchingMarket = new w3.eth.Contract(require('./out/exchange/thirdparty/MatchingMarket.abi.json'), MATCHING_MARKET)
-
-    const defaultAccount = (await w3.eth.getAccounts())[0]
-
-    const melonAsset = new Asset(MELON_T_ADDR)
-    const etherAsset = new Asset(ETH_T_ADDR)
-
-    console.log(
-        'Balance of Ether Asset: ',
-        await etherAsset.balanceOf(defaultAccount)
-    )
-
-    console.log(
-        'Balance of Melon Asset: ',
-        await melonAsset.balanceOf(defaultAccount)
-    )
-
-    /** Send opts */
-    const opts = {
-        from: defaultAccount,
-        gas: 6000000,
-        gasPrice: w3.utils.toWei('2', 'shannon'),
+class MatchingMarket {
+    constructor(addr) {
+        this.address = addr
+        this.instance = new w3.eth.Contract(
+            require('./out/exchange/thirdparty/MatchingMarket.abi.json'), 
+            addr,
+        )
     }
+
+    lastOfferID() {
+        return this.instance.methods.last_offer_id().call()
+    }
+
+    getOffer(id) {
+        return this.instance.methods.getOffer(id).call()
+    }
+
+    getOwner(id) {
+        return this.instance.methods.getOwner(id).call()
+    }
+
+    buy(id, quant, opts) {
+        return this.instance.methods.buy(id, quant).send(opts)
+    }
+}
+
+module.exports = () => {
+    return new MatchingMarket(MATCHING_MARKET)
+}
+
+// const main = async () => {
+//     const matchingMarket = new w3.eth.Contract(require('./out/exchange/thirdparty/MatchingMarket.abi.json'), MATCHING_MARKET)
+
+//     const defaultAccount = (await w3.eth.getAccounts())[0]
+
+//     const melonAsset = new Asset(MELON_T_ADDR)
+//     const etherAsset = new Asset(ETH_T_ADDR)
+
+//     console.log(
+//         'Balance of Ether Asset: ',
+//         await etherAsset.balanceOf(defaultAccount)
+//     )
+
+//     console.log(
+//         'Balance of Melon Asset: ',
+//         await melonAsset.balanceOf(defaultAccount)
+//     )
+
+//     /** Send opts */
+//     const opts = {
+//         from: defaultAccount,
+//         gas: 6000000,
+//         gasPrice: w3.utils.toWei('2', 'shannon'),
+//     }
 
     /** Send Tokens */
     // const sendTokens = async (dest, amts) => {
@@ -73,7 +103,7 @@ const main = async () => {
 
     /** Take an order */
 
-}
+// }
 
-main()
-  .catch(console.log)
+// main()
+//   .catch(console.log)
